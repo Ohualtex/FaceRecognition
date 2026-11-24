@@ -7,8 +7,10 @@
     <Nullable>enable</Nullable>
     <PlatformTarget>x64</PlatformTarget>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationIcon>FaceRecognition.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="FaceRecognition.ico" LogicalName="FaceRecognition.ico" />
     <PackageReference Include="OpenCvSharp5.Windows" Version="5.1.0.20261115" />
     <None Update="Models/haarcascade_frontalface_default.xml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
