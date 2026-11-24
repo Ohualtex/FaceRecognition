@@ -2,12 +2,13 @@ using FaceRecognition.Imaging;
 
 namespace FaceRecognition;
 
-internal sealed class FaceForm : Form
+internal sealed partial class FaceForm : Form
 {
     private static readonly Color Canvas = Color.FromArgb(243, 246, 248);
     private static readonly Color Ink = Color.FromArgb(25, 47, 54);
     private static readonly Color Accent = Color.FromArgb(20, 109, 100);
     private static readonly Color ErrorInk = Color.FromArgb(155, 36, 61);
+    private static readonly string ModelPath = Path.Combine(AppContext.BaseDirectory, "Models", "haarcascade_frontalface_default.xml");
     private readonly Button choosePhoto = new() { Text = "Choose photo", AutoSize = true };
     private readonly PictureBox preview = new()
     {
@@ -21,7 +22,7 @@ internal sealed class FaceForm : Form
         Dock = DockStyle.Fill,
         AutoEllipsis = true,
         TextAlign = ContentAlignment.MiddleLeft,
-        Text = "Choose a photo to detect faces."
+        Text = "Choose a photo or start the camera to detect faces."
     };
 
     public FaceForm()
@@ -53,20 +54,25 @@ internal sealed class FaceForm : Form
             WrapContents = false,
             Margin = new Padding(0, 0, 0, 12)
         };
-        choosePhoto.FlatStyle = FlatStyle.Flat;
-        choosePhoto.FlatAppearance.BorderSize = 0;
-        choosePhoto.UseVisualStyleBackColor = false;
-        choosePhoto.BackColor = Accent;
-        choosePhoto.ForeColor = Color.White;
-        choosePhoto.Padding = new Padding(12, 5, 12, 5);
-        var title = new Label { Text = "Face detection", AutoSize = true, Margin = new Padding(14, 11, 0, 0) };
-        toolbar.Controls.AddRange([choosePhoto, title]);
+        foreach (Button button in new[] { choosePhoto, startCamera, stopCamera })
+        {
+            button.FlatStyle = FlatStyle.Flat;
+            button.FlatAppearance.BorderSize = 0;
+            button.UseVisualStyleBackColor = false;
+            button.BackColor = Accent;
+            button.ForeColor = Color.White;
+            button.Padding = new Padding(12, 5, 12, 5);
+        }
+
+        toolbar.Controls.AddRange([choosePhoto, startCamera, stopCamera]);
         layout.Controls.Add(toolbar, 0, 0);
         layout.Controls.Add(preview, 0, 1);
         layout.Controls.Add(status, 0, 2);
         Controls.Add(layout);
 
         choosePhoto.Click += async (_, _) => await OpenPhotoAsync();
+        startCamera.Click += async (_, _) => await StartCameraAsync();
+        stopCamera.Click += (_, _) => StopCamera();
     }
 
     private async Task OpenPhotoAsync()
@@ -79,13 +85,12 @@ internal sealed class FaceForm : Form
         };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
-        choosePhoto.Enabled = false;
+        choosePhoto.Enabled = startCamera.Enabled = false;
         SetStatus("Detecting faces...");
         string photoPath = dialog.FileName;
-        string modelPath = Path.Combine(AppContext.BaseDirectory, "Models", "haarcascade_frontalface_default.xml");
         try
         {
-            var (image, count) = await Task.Run(() => PhotoPreview.Create(photoPath, modelPath));
+            var (image, count) = await Task.Run(() => PhotoPreview.Create(photoPath, ModelPath));
             if (IsDisposed)
             {
                 image.Dispose();
@@ -93,12 +98,7 @@ internal sealed class FaceForm : Form
             }
 
             ReplaceImage(image);
-            SetStatus(count switch
-            {
-                0 => "No faces detected.",
-                1 => "1 face detected.",
-                _ => $"{count} faces detected."
-            });
+            SetStatus(DescribeFaces(count));
         }
         catch (Exception error)
         {
@@ -108,9 +108,17 @@ internal sealed class FaceForm : Form
         }
         finally
         {
-            if (!IsDisposed) choosePhoto.Enabled = true;
+            if (!IsDisposed) choosePhoto.Enabled = startCamera.Enabled = true;
         }
     }
+
+    private static string DescribeFaces(int count) => count switch
+    {
+        0 => "No faces detected.",
+        1 => "1 face detected.",
+        _ => $"{count} faces detected."
+    };
+
 
     private void SetStatus(string message, bool error = false)
     {
@@ -127,7 +135,11 @@ internal sealed class FaceForm : Form
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing) ReplaceImage(null);
+        if (disposing)
+        {
+            cameraStop?.Cancel();
+            ReplaceImage(null);
+        }
         base.Dispose(disposing);
     }
 }

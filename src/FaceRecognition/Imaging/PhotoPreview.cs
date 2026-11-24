@@ -15,11 +15,16 @@ internal static class PhotoPreview
             throw new InvalidDataException("OpenCV could not read the selected image. Choose a valid image file.");
 
         using var detector = new FaceDetector(modelPath);
+        return Annotate(image, detector);
+    }
+
+    public static (Bitmap Image, int FaceCount) Annotate(Mat image, FaceDetector detector)
+    {
         Rect[] faces = detector.Detect(image);
         foreach (Rect face in faces)
             Cv2.Rectangle(image, face, new Scalar(90, 238, 108), 3);
 
-        if (!Cv2.ImEncode(".png", image, out byte[] preview))
+        if (!Cv2.ImEncode(".bmp", image, out byte[] preview))
             throw new InvalidDataException("The annotated preview could not be created.");
 
         using var stream = new MemoryStream(preview);
