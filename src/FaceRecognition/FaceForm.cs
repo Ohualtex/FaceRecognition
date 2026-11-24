@@ -9,7 +9,7 @@ internal sealed partial class FaceForm : Form
     private readonly PictureBox preview = new()
     {
         Dock = DockStyle.Fill,
-        BackColor = Color.FromArgb(225, 232, 235),
+        BackColor = Color.FromArgb(220, 234, 246),
         SizeMode = PictureBoxSizeMode.Zoom,
         AccessibleName = "Image preview"
     };

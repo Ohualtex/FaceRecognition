@@ -34,7 +34,10 @@ internal static class PhotoPreview
             : faces.Select(face => recognizer.Predict(image, face)).ToArray();
 
         foreach (Rect face in faces)
-            Cv2.Rectangle(image, face, new Scalar(90, 238, 108), 3);
+        {
+            Cv2.Rectangle(image, face, new Scalar(62, 42, 23), 6);
+            Cv2.Rectangle(image, face, new Scalar(254, 255, 217), 2);
+        }
 
         if (!Cv2.ImEncode(".bmp", image, out byte[] preview))
             throw new InvalidDataException("The annotated preview could not be created.");
@@ -60,7 +63,8 @@ internal static class PhotoPreview
         using var graphics = Graphics.FromImage(bitmap);
         graphics.CompositingQuality = CompositingQuality.HighQuality;
         using var font = new Font("Segoe UI", Math.Clamp(bitmap.Width / 55f, 17f, 64f), FontStyle.Bold, GraphicsUnit.Pixel);
-        using var fill = new SolidBrush(Color.FromArgb(225, 18, 42, 44));
+        using var fill = new SolidBrush(Color.FromArgb(232, 23, 42, 62));
+        using var textColor = new SolidBrush(Color.FromArgb(217, 255, 254));
         using var format = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
         float padding = font.Size / 3f;
         for (int index = 0; index < faces.Length; index++)
@@ -73,7 +77,7 @@ internal static class PhotoPreview
             float left = Math.Clamp(face.X, 0, bitmap.Width - width);
             float top = Math.Clamp(face.Y >= height ? face.Y - height : face.Y + face.Height, 0, bitmap.Height - height);
             graphics.FillRectangle(fill, left, top, width, height);
-            graphics.DrawString(text, font, Brushes.White,
+            graphics.DrawString(text, font, textColor,
                 new RectangleF(left + padding, top, Math.Max(1, width - 2 * padding), height), format);
         }
     }

@@ -36,7 +36,7 @@ internal sealed partial class FaceForm
             recognizer?.Dispose();
             recognizer = trained;
             modelStatus.Text = "Recognition ready";
-            modelStatus.ForeColor = Accent;
+            modelStatus.ForeColor = Color.FromArgb(36, 88, 121);
             modelDetails.Text = $"{labels} labels · {samples} samples";
             ReplaceImage(null);
             string message = $"Loaded {samples} samples across {labels} labels.";

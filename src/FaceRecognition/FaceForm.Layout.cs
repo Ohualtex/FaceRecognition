@@ -2,10 +2,10 @@ namespace FaceRecognition;
 
 internal sealed partial class FaceForm
 {
-    private static readonly Color Canvas = Color.FromArgb(243, 246, 248);
-    private static readonly Color Ink = Color.FromArgb(25, 47, 54);
-    private static readonly Color MutedInk = Color.FromArgb(82, 101, 106);
-    private static readonly Color Accent = Color.FromArgb(20, 109, 100);
+    private static readonly Color Canvas = Color.FromArgb(239, 247, 253);
+    private static readonly Color Ink = Color.FromArgb(23, 42, 62);
+    private static readonly Color MutedInk = Color.FromArgb(74, 99, 124);
+    private static readonly Color Accent = Color.FromArgb(217, 255, 254);
     private static readonly Color ErrorInk = Color.FromArgb(155, 36, 61);
     private readonly ToolTip statusTip = new();
     private readonly Label modelStatus = new() { Text = "Detection only", AutoSize = true };
@@ -124,15 +124,15 @@ internal sealed partial class FaceForm
         {
             var (normal, focused, hover, pressed) = tone switch
             {
-                CommandTone.Primary => (Accent, Color.FromArgb(13, 77, 70), Color.FromArgb(17, 91, 83), Color.FromArgb(11, 68, 61)),
+                CommandTone.Primary => (Accent, Color.FromArgb(163, 222, 237), Color.FromArgb(193, 240, 247), Color.FromArgb(177, 229, 241)),
                 CommandTone.Stop => (ErrorInk, Color.FromArgb(116, 23, 43), Color.FromArgb(137, 29, 52), Color.FromArgb(103, 21, 38)),
-                _ => (Color.White, Color.FromArgb(207, 231, 226), Color.FromArgb(228, 239, 237), Color.FromArgb(218, 234, 231))
+                _ => (Color.White, Color.FromArgb(203, 230, 247), Color.FromArgb(229, 243, 253), Color.FromArgb(212, 232, 248))
             };
             bool keyboardFocus = Enabled && Focused && base.ShowFocusCues;
-            BackColor = Enabled ? (keyboardFocus ? focused : normal) : Color.FromArgb(230, 236, 238);
-            ForeColor = Enabled ? (tone == CommandTone.Secondary ? Ink : Color.White) : MutedInk;
-            FlatAppearance.BorderSize = Enabled && tone == CommandTone.Secondary ? 1 : 0;
-            FlatAppearance.BorderColor = Color.FromArgb(191, 208, 211);
+            BackColor = Enabled ? (keyboardFocus ? focused : normal) : Color.FromArgb(225, 235, 244);
+            ForeColor = Enabled ? (tone == CommandTone.Stop ? Color.White : Ink) : MutedInk;
+            FlatAppearance.BorderSize = Enabled && tone != CommandTone.Stop ? 1 : 0;
+            FlatAppearance.BorderColor = Color.FromArgb(164, 195, 216);
             FlatAppearance.MouseOverBackColor = hover;
             FlatAppearance.MouseDownBackColor = pressed;
         }
