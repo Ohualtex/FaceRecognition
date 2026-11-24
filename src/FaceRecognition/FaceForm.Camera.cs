@@ -1,3 +1,5 @@
+using FaceRecognition.Imaging;
+
 namespace FaceRecognition;
 
 internal sealed partial class FaceForm
@@ -12,6 +14,7 @@ internal sealed partial class FaceForm
         if (cameraStop is not null || !startCamera.Enabled) return;
 
         using var stop = new CancellationTokenSource();
+        LocalFaceRecognizer? currentRecognizer = recognizer;
         cameraStop = stop;
         SetInputControlsEnabled(false);
         stopCamera.Enabled = true;
@@ -20,8 +23,8 @@ internal sealed partial class FaceForm
 
         try
         {
-            await Task.Run(() => Imaging.CameraPreview.Run(ModelPath, stop.Token,
-                (image, count) => PublishCameraFrame(image, count, stop.Token)));
+            await Task.Run(() => CameraPreview.Run(ModelPath, currentRecognizer, stop.Token,
+                (image, count) => PublishCameraFrame(image, count, currentRecognizer is not null, stop.Token)));
             if (!IsDisposed) SetStatus("Camera stopped.");
         }
         catch (Exception error)
@@ -54,7 +57,7 @@ internal sealed partial class FaceForm
         SetStatus("Stopping camera...");
     }
 
-    private void PublishCameraFrame(Bitmap image, int count, CancellationToken stop)
+    private void PublishCameraFrame(Bitmap image, int count, bool recognitionEnabled, CancellationToken stop)
     {
         // Synchronous dispatch keeps at most one frame waiting for the UI.
         Bitmap? pending = image;
@@ -66,7 +69,8 @@ internal sealed partial class FaceForm
                 if (stop.IsCancellationRequested || IsDisposed) return;
                 ReplaceImage(image);
                 pending = null;
-                SetStatus("Camera live · " + DescribeFaces(count));
+                string mode = recognitionEnabled ? "Recognition" : "Detection";
+                SetStatus($"Camera live · {mode} · {DescribeFaces(count)}");
             });
         }
         finally

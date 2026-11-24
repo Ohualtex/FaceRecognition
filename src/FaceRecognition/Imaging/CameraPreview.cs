@@ -4,7 +4,7 @@ namespace FaceRecognition.Imaging;
 
 internal static class CameraPreview
 {
-    public static void Run(string modelPath, CancellationToken stop, Action<Bitmap, int> publish)
+    public static void Run(string modelPath, LocalFaceRecognizer? recognizer, CancellationToken stop, Action<Bitmap, int> publish)
     {
         using var detector = new FaceDetector(modelPath);
         using var camera = new VideoCapture();
@@ -14,6 +14,12 @@ internal static class CameraPreview
 
         camera.Set(VideoCaptureProperties.FrameWidth, 640);
         camera.Set(VideoCaptureProperties.FrameHeight, 480);
+        ReadFrames(camera, detector, recognizer, stop, publish);
+    }
+
+    private static void ReadFrames(VideoCapture camera, FaceDetector detector, LocalFaceRecognizer? recognizer,
+        CancellationToken stop, Action<Bitmap, int> publish)
+    {
         using var frame = new Mat();
 
         while (!stop.IsCancellationRequested)
@@ -23,7 +29,7 @@ internal static class CameraPreview
             if (!hasFrame)
                 throw new IOException("The camera stopped providing frames. Check the connection and try again.");
 
-            var (image, count) = PhotoPreview.Annotate(frame, detector);
+            var (image, count) = PhotoPreview.Annotate(frame, detector, recognizer);
             // The receiver owns the bitmap even if it discards a frame during shutdown.
             publish(image, count);
         }
