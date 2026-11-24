@@ -13,7 +13,7 @@ internal sealed partial class FaceForm
 
         using var stop = new CancellationTokenSource();
         cameraStop = stop;
-        choosePhoto.Enabled = startCamera.Enabled = false;
+        SetInputControlsEnabled(false);
         stopCamera.Enabled = true;
         ReplaceImage(null);
         SetStatus("Starting camera...");
@@ -40,7 +40,7 @@ internal sealed partial class FaceForm
             if (!IsDisposed)
             {
                 ReplaceImage(null);
-                choosePhoto.Enabled = startCamera.Enabled = true;
+                SetInputControlsEnabled(true);
                 stopCamera.Enabled = false;
                 if (closeAfterCamera) Close();
             }

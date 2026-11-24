@@ -54,7 +54,7 @@ internal sealed partial class FaceForm : Form
             WrapContents = false,
             Margin = new Padding(0, 0, 0, 12)
         };
-        foreach (Button button in new[] { choosePhoto, startCamera, stopCamera })
+        foreach (Button button in new[] { choosePhoto, startCamera, stopCamera, loadSamples })
         {
             button.FlatStyle = FlatStyle.Flat;
             button.FlatAppearance.BorderSize = 0;
@@ -64,7 +64,7 @@ internal sealed partial class FaceForm : Form
             button.Padding = new Padding(12, 5, 12, 5);
         }
 
-        toolbar.Controls.AddRange([choosePhoto, startCamera, stopCamera]);
+        toolbar.Controls.AddRange([choosePhoto, startCamera, stopCamera, loadSamples]);
         layout.Controls.Add(toolbar, 0, 0);
         layout.Controls.Add(preview, 0, 1);
         layout.Controls.Add(status, 0, 2);
@@ -73,6 +73,7 @@ internal sealed partial class FaceForm : Form
         choosePhoto.Click += async (_, _) => await OpenPhotoAsync();
         startCamera.Click += async (_, _) => await StartCameraAsync();
         stopCamera.Click += (_, _) => StopCamera();
+        loadSamples.Click += async (_, _) => await LoadSamplesAsync();
     }
 
     private async Task OpenPhotoAsync()
@@ -85,12 +86,13 @@ internal sealed partial class FaceForm : Form
         };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
-        choosePhoto.Enabled = startCamera.Enabled = false;
+        SetInputControlsEnabled(false);
         SetStatus("Detecting faces...");
         string photoPath = dialog.FileName;
+        LocalFaceRecognizer? currentRecognizer = recognizer;
         try
         {
-            var (image, count) = await Task.Run(() => PhotoPreview.Create(photoPath, ModelPath));
+            var (image, count) = await Task.Run(() => PhotoPreview.Create(photoPath, ModelPath, currentRecognizer));
             if (IsDisposed)
             {
                 image.Dispose();
@@ -108,7 +110,7 @@ internal sealed partial class FaceForm : Form
         }
         finally
         {
-            if (!IsDisposed) choosePhoto.Enabled = startCamera.Enabled = true;
+            if (!IsDisposed) SetInputControlsEnabled(true);
         }
     }
 
@@ -118,7 +120,6 @@ internal sealed partial class FaceForm : Form
         1 => "1 face detected.",
         _ => $"{count} faces detected."
     };
-
 
     private void SetStatus(string message, bool error = false)
     {
@@ -138,6 +139,8 @@ internal sealed partial class FaceForm : Form
         if (disposing)
         {
             cameraStop?.Cancel();
+            recognizer?.Dispose();
+            recognizer = null;
             ReplaceImage(null);
         }
         base.Dispose(disposing);
