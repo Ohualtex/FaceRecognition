@@ -4,7 +4,7 @@ namespace FaceRecognition;
 
 internal sealed partial class FaceForm
 {
-    private readonly Button loadSamples = new() { Text = "Load samples", AutoSize = true };
+    private readonly CommandButton loadSamples = new("Load samples");
     private LocalFaceRecognizer? recognizer;
 
     private async Task LoadSamplesAsync()
@@ -35,6 +35,9 @@ internal sealed partial class FaceForm
 
             recognizer?.Dispose();
             recognizer = trained;
+            modelStatus.Text = "Recognition ready";
+            modelStatus.ForeColor = Accent;
+            modelDetails.Text = $"{labels} labels · {samples} samples";
             ReplaceImage(null);
             string message = $"Loaded {samples} samples across {labels} labels.";
             if (skipped > 0) message += $" Skipped {skipped} invalid samples.";
@@ -52,6 +55,6 @@ internal sealed partial class FaceForm
 
     private void SetInputControlsEnabled(bool enabled)
     {
-        choosePhoto.Enabled = startCamera.Enabled = loadSamples.Enabled = enabled;
+        choosePhoto.Enabled = cameraButton.Enabled = loadSamples.Enabled = enabled;
     }
 }

@@ -4,20 +4,21 @@ namespace FaceRecognition;
 
 internal sealed partial class FaceForm
 {
-    private readonly Button startCamera = new() { Text = "Start camera", AutoSize = true };
-    private readonly Button stopCamera = new() { Text = "Stop camera", AutoSize = true, Enabled = false };
+    private readonly CommandButton cameraButton = new("Start camera") { MinimumSize = new Size(126, 38) };
     private CancellationTokenSource? cameraStop;
     private bool closeAfterCamera;
 
     private async Task StartCameraAsync()
     {
-        if (cameraStop is not null || !startCamera.Enabled) return;
+        if (cameraStop is not null || !cameraButton.Enabled) return;
 
         using var stop = new CancellationTokenSource();
         LocalFaceRecognizer? currentRecognizer = recognizer;
         cameraStop = stop;
         SetInputControlsEnabled(false);
-        stopCamera.Enabled = true;
+        cameraButton.Text = "Stop camera";
+        cameraButton.SetTone(CommandTone.Stop);
+        cameraButton.Enabled = true;
         ReplaceImage(null);
         SetStatus("Starting camera...");
 
@@ -44,7 +45,8 @@ internal sealed partial class FaceForm
             {
                 ReplaceImage(null);
                 SetInputControlsEnabled(true);
-                stopCamera.Enabled = false;
+                cameraButton.Text = "Start camera";
+                cameraButton.SetTone(CommandTone.Secondary);
                 if (closeAfterCamera) Close();
             }
         }
@@ -53,7 +55,7 @@ internal sealed partial class FaceForm
     private void StopCamera()
     {
         cameraStop?.Cancel();
-        stopCamera.Enabled = false;
+        cameraButton.Enabled = false;
         SetStatus("Stopping camera...");
     }
 
