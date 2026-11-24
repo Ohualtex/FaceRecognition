@@ -13,22 +13,10 @@ internal sealed partial class FaceForm
 
     private Control BuildLayout()
     {
-        var layout = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            ColumnCount = 1,
-            RowCount = 3,
-            Padding = new Padding(20)
-        };
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 56));
-        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 48));
-
-        var toolbar = new Panel { Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 12) };
+        var layout = new Panel { Dock = DockStyle.Fill, Padding = new Padding(20) };
+        var toolbar = new Panel { Dock = DockStyle.Top };
         Control commands = CommandGroup(choosePhoto, cameraButton);
         toolbar.Controls.Add(commands);
-
 
         var modelState = new FlowLayoutPanel
         {
@@ -59,32 +47,33 @@ internal sealed partial class FaceForm
 
         void FitToolbar()
         {
+            int width = layout.ClientSize.Width - layout.Padding.Horizontal;
             Size commandSize = commands.GetPreferredSize(Size.Empty);
             Size sampleSize = samples.GetPreferredSize(Size.Empty);
-            bool compact = toolbar.ClientSize.Width < commandSize.Width + sampleSize.Width + 12;
-            int sampleTop = compact ? commandSize.Height + 8 : 0;
-            int rowHeight = Math.Max(commandSize.Height, sampleTop + sampleSize.Height);
+            int groupGap = LogicalToDeviceUnits(12);
+            bool compact = width < commandSize.Width + sampleSize.Width + groupGap;
+            int sampleTop = compact ? commandSize.Height + LogicalToDeviceUnits(8) : 0;
 
             commands.Bounds = new Rectangle(0, 0, commandSize.Width, commandSize.Height);
-            samples.Bounds = new Rectangle(Math.Max(0, toolbar.ClientSize.Width - sampleSize.Width), sampleTop,
+            samples.Bounds = new Rectangle(Math.Max(0, width - sampleSize.Width), sampleTop,
                 sampleSize.Width, sampleSize.Height);
-            int layoutHeight = rowHeight + toolbar.Margin.Vertical;
-            if (layout.RowStyles[0].Height != layoutHeight)
-                layout.RowStyles[0].Height = layoutHeight;
+
+            // Docking reserves the full toolbar height before sizing the preview.
+            toolbar.Height = Math.Max(commandSize.Height, samples.Bottom) + groupGap;
         }
 
-        toolbar.SizeChanged += (_, _) => FitToolbar();
-        modelStatus.TextChanged += (_, _) => FitToolbar();
-        modelDetails.TextChanged += (_, _) => FitToolbar();
-
-
-        preview.Margin = Padding.Empty;
-        status.Margin = new Padding(0, 8, 0, 0);
+        status.Dock = DockStyle.Bottom;
+        status.Height = 48;
+        status.Padding = new Padding(0, 8, 0, 0);
         status.UseMnemonic = false;
         statusTip.SetToolTip(status, status.Text);
-        layout.Controls.Add(toolbar, 0, 0);
-        layout.Controls.Add(preview, 0, 1);
-        layout.Controls.Add(status, 0, 2);
+        layout.Controls.AddRange([preview, status, toolbar]);
+
+        layout.ClientSizeChanged += (_, _) => FitToolbar();
+        cameraButton.TextChanged += (_, _) => FitToolbar();
+        modelStatus.TextChanged += (_, _) => FitToolbar();
+        modelDetails.TextChanged += (_, _) => FitToolbar();
+        FitToolbar();
         return layout;
     }
 
