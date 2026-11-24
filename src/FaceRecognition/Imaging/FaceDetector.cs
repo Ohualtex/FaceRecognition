@@ -23,7 +23,7 @@ internal sealed class FaceDetector : IDisposable
         using var gray = new Mat();
         Cv2.CvtColor(image, gray, ColorConversionCodes.BGR2GRAY);
         Cv2.EqualizeHist(gray, gray);
-        return classifier.DetectMultiScale(gray, scaleFactor: 1.1, minNeighbors: 5, minSize: new OpenCvSharp.Size(28, 28));
+        return classifier.DetectMultiScale(gray, scaleFactor: 1.1, minNeighbors: 9, minSize: new OpenCvSharp.Size(28, 28));
     }
 
     public void Dispose() => classifier.Dispose();
